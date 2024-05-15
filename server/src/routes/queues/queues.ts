@@ -5,19 +5,19 @@ import {
   retrieveQueueMessage,
 } from "../../services/mongodb.service";
 import { MongoClient } from "mongodb";
-import {
-  DB_SCHEMA,
-  IGenericQueueRecord,
-  QueueRecord,
-} from "../../consts/types";
-import { isEmpty } from "./queueValidation.util";
+import { IGenericQueueRecord, QueueRecord } from "../../consts/types";
+import { isEmpty, isJsonSizeUnder256KB } from "./queueValidation.util";
 export const queueRouter = express.Router();
 
 queueRouter.post("/:queue_name", async (req, res) => {
   const { queue_name } = req.params;
   const messageContent = req.body;
   try {
-    if (isEmpty(messageContent) && QueueRecord.validate(queue_name)) {
+    if (
+      isEmpty(messageContent) &&
+      QueueRecord.validate(queue_name) &&
+      isJsonSizeUnder256KB(messageContent)
+    ) {
       res.status(400).json({
         status: "failed",
         message: "Message not valid",
